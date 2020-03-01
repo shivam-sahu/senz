@@ -65,7 +65,13 @@ router.post("/register", function (req, res) {
       auth: false,
       token: null
     });
-  } else {
+  }
+  User.findOne({ email: req.body.email })
+    .then(user => {
+      if (user) {
+        return res.status(409).send({ email: "Email already registered" });
+      } 
+      else {
     var hashedPass = bcrypt.hashSync(req.body.password, 8);
     User.create(
       {
@@ -99,6 +105,7 @@ router.post("/register", function (req, res) {
       }
     );
   }
+  })
 });
 
 /**
