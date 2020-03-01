@@ -70,42 +70,47 @@ router.post("/register", function (req, res) {
     .then(user => {
       if (user) {
         return res.status(409).send({ email: "Email already registered" });
-      } 
-      else {
-    var hashedPass = bcrypt.hashSync(req.body.password, 8);
-    User.create(
-      {
-        name: req.body.name,
-        email: req.body.email,
-        password: hashedPass,
-        signature: getSignature(String(req.body.name))
-      },
-      function (err, user) {
-        if (err)
-          res.status(500).json({
-            auth: false,
-            token: null
-          });
-        var token = jwt.sign(
+      } else {
+        var hashedPass = bcrypt.hashSync(req.body.password, 8);
+        User.create(
           {
-            id: user._id,
-            name: user.name,
-            signature: user.signature,
-            email: user.email
+            name: req.body.name,
+            email: req.body.email,
+            password: hashedPass,
+            signature: getSignature(String(req.body.name))
           },
-          config.secretKey,
-          {
-            expiresIn: 86400 // expires in 24 hours
+          function(err, user) {
+            if (err)
+              res.status(500).json({
+                auth: false,
+                token: null
+              });
+            var token = jwt.sign(
+              {
+                id: user._id,
+                name: user.name,
+                signature: user.signature,
+                email: user.email
+              },
+              config.secretKey,
+              {
+                expiresIn: 86400 // expires in 24 hours
+              }
+            );
+            res.status(200).json({
+              auth: true,
+              token: token
+            });
           }
         );
-        res.status(200).json({
-          auth: true,
-          token: token
-        });
       }
+    })
+    .catch(error =>
+      res.status(500).json({
+        auth: false,
+        token: null
+      })
     );
-  }
-  })
 });
 
 /**
