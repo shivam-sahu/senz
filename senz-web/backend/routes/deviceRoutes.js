@@ -120,6 +120,59 @@ router.delete("/:userId/delete/:deviceId", jwtVerify, (req, res) => {
     });
 });
 
+// delete a device from all device menu
+router.delete("/:userId/delete", jwtVerify, (req, res) => {
+  const userId = req.params.userId;
+  const devices = req.body;
+  // console.log(userId, devices)
+  devices.forEach(deviceId => {
+    //Remove from the pkMap
+    Device.findById(deviceId).then(foundDevice => {
+      pkMap.findOneAndDelete({ publicKey: foundDevice.pubkey }).catch(err => {
+        throw err;
+      });
+    });
+    //Remove device from projects
+    Device.findById(deviceId).then(foundDevice => {
+      const {projects} = foundDevice;
+      projects.forEach(projectId => {
+        Project.findById(projectId)
+          .then(project => {
+            const upDatedDeviceList = project.devices.filter(device=>{
+              return device._id.toString() !== deviceId;
+            });
+            project.devices = upDatedDeviceList;
+            // project.save()
+            project.save()
+            .catch(err =>{
+              throw err;
+            });
+          })
+          .catch(err => {
+            throw err;
+          });
+      });
+    })
+    .catch(err => {
+      throw err;
+    });
+    //Remove the device
+    Device.findByIdAndDelete(deviceId).catch(err => {
+      throw err;
+    });
+    //Remove from user device's list
+    User.findById(userId)
+      .then(user => {
+        user.devices.remove(deviceId);
+        user.save().then(pr => {
+          res.status(200).json("Deleted");
+        });
+      })
+      .catch(err => {
+        throw err;
+      });
+  });
+});
 /**
  * @api {get} device/:userId/all Get all the devices of a particular user
  * @apiGroup Devices
