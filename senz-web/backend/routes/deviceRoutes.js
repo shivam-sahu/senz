@@ -72,6 +72,63 @@ router.post("/:userId/new", jwtVerify, (req, res) => {
     });
 });
 
+router.put("/:userid/edit", jwtVerify,async (req, res) =>{
+  const userid = req.params.userid;
+  const {name, pubkey, deviceId} = req.body;
+  const update = {name, pubkey};
+  //update in pkmap
+  //finding pkmap on the basis of old key and signature and then updating it.
+  await User.findById(userid).then( foundUser => {
+    const { signature } = foundUser;
+    Device.findById(deviceId).then( foundDevice => {
+      const oldPubKey = foundDevice.pubkey;
+        pkMap.findOneAndUpdate({signature:signature, publicKey:oldPubKey}, {publicKey:pubkey})
+        .catch(err =>{throw err});
+    })
+    .catch(err => {throw err});
+  })
+  .catch(err => { throw err });
+
+  //update in devices
+  Device.findOneAndUpdate(deviceId, update)
+  .catch(err=>{throw err});
+
+  //update in projects
+  Device.findById(deviceId).then(foundDevice=>{
+    const { projects } = foundDevice;
+    projects.forEach(projectId => {
+      Project.findById(projectId).then( project =>{
+        const upDatedDeviceList = project.devices.map(device =>{
+          if(device._id.toString() === deviceId){
+            device.name = name;
+            device.pubkey = pubkey;
+          }
+          return device;
+        });
+        project.devices = upDatedDeviceList;
+        project.markModified("devices");
+        project.save()
+        .catch(err =>{
+          throw err;
+        });
+      })
+      .catch(err => {
+          throw err;
+        });
+    });
+  })
+  .catch(err =>{
+      throw err;
+    });
+  // send all device list to user
+  User.findById(req.params.userid)
+    .populate("devices")
+    .exec((err, user) => {
+      if (err) throw err;
+      res.status(200).json(user.devices);
+    });
+});
+
 /**
  * @api {delete} device/:userId/delete/:deviceId Delete a device for a user
  * @apiGroup Devices
