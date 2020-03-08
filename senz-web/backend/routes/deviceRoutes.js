@@ -178,13 +178,13 @@ router.delete("/:userId/delete/:deviceId", jwtVerify, (req, res) => {
 });
 
 // delete a device from all device menu
-router.delete("/:userId/delete", jwtVerify, (req, res) => {
+router.delete("/:userId/delete", jwtVerify,(req, res) => {
   const userId = req.params.userId;
   const devices = req.body;
   // console.log(userId, devices)
-  devices.forEach(deviceId => {
+  devices.forEach(async deviceId => {
     //Remove from the pkMap
-    Device.findById(deviceId).then(foundDevice => {
+    await Device.findById(deviceId).then(foundDevice => {
       pkMap.findOneAndDelete({ publicKey: foundDevice.pubkey }).catch(err => {
         throw err;
       });

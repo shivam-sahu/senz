@@ -4,7 +4,7 @@ import { deviceReducers } from "../_reducers/deviceReducers";
 describe("Device Reducer", () => {
   it("Should return the default state", () => {
     const newState = deviceReducers(undefined, {});
-    expect(newState).toEqual({ AllDevices: [], SelectedDevice: {} });
+    expect(newState).toEqual({ AllDevices: [], SelectedDevice: {}, isEditingDevice: false });
   });
   it("Should add a device ", () => {
     const initState = { AllDevices: [{ name: "Test1" }], SelectedDevice: {} };
@@ -15,7 +15,8 @@ describe("Device Reducer", () => {
     });
     expect(newState).toEqual({
       AllDevices: [...initState.AllDevices, mockPayload],
-      SelectedDevice: {}
+      SelectedDevice: {},
+      isEditingDevice: false 
     });
   });
   it("Should fetch all devices", () => {
@@ -24,6 +25,6 @@ describe("Device Reducer", () => {
       type: FETCH_DEVICES,
       payload: mockPayload
     });
-    expect(newState).toEqual({ AllDevices: mockPayload, SelectedDevice: {} });
+    expect(newState).toEqual({ AllDevices: mockPayload, SelectedDevice: {}, isEditingDevice: false });
   });
 });
