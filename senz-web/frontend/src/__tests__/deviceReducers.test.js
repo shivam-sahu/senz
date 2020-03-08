@@ -7,7 +7,7 @@ describe("Device Reducer", () => {
     expect(newState).toEqual({ AllDevices: [], SelectedDevice: {}, isEditingDevice: false });
   });
   it("Should add a device ", () => {
-    const initState = { AllDevices: [{ name: "Test1" }], SelectedDevice: {} };
+    const initState = { AllDevices: [{ name: "Test1" }], SelectedDevice: {}, isEditingDevice: false };
     const mockPayload = { name: "Test2" };
     const newState = deviceReducers(initState, {
       type: ADD_DEVICE,
